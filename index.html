@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.106.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/scatter-gl@0.0.1/lib/scatter-gl.min.js"></script>
+    <style>
+      #scatter {
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scatter"></div>
+    <script>
+      (async () => {
+
+        // load data
+        const result = await fetch("points.json");
+        const data = await result.json();
+
+        // parse data
+        const metadata = [];
+        const dataPoints = [];
+        data.projection.forEach((vector, index) => {
+          const labelIndex = data.labels[index];
+          dataPoints.push(vector);
+          metadata.push({
+            labelIndex,
+            label: data.labelNames[labelIndex],
+          });
+        });
+
+        // create dataset
+        const dataset = new ScatterGL.Dataset(dataPoints, metadata);
+        dataset.setSpriteMetadata({
+            spriteImage: 'spritesheet.png',
+            singleSpriteSize: [28, 28],
+        });
+
+        // parameters & callbacks
+        const params = {
+          onHover: (pt) => {
+            if (pt != null) {
+              const idx = data.labels[pt];
+              const label = data.labelNames[idx];
+              console.log(label);
+            }
+          },
+        };
+
+        // create scatter plot
+        scatterGL = new ScatterGL(document.querySelector("#scatter"), params);
+        scatterGL.render(dataset);
+
+        // select mode ...
+        // scatterGL.setTextRenderMode();
+        // scatterGL.setPointRenderMode();
+        scatterGL.setSpriteRenderMode();
+
+        // resize, when resizing the window
+        window.addEventListener("resize",  () => scatterGL.resize() );
+
+      })();
+    </script>
+  </body>
+</html>
